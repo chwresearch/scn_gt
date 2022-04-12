@@ -1,0 +1,260 @@
+# Llamar librerías
+library(readxl)
+library(openxlsx)
+library(reshape2)
+library(stringr)
+library(plyr)
+
+# Limpiar el área de trabajo
+rm(list = ls())
+
+# Se pone la ruta de trabajo en una variable (con "/")
+wd <- "C:/Users/renato/GitHub/scn_gt/datos"
+# Cambiar la ruta de trabajo con la variable anterior
+setwd(wd)
+
+
+# Lógica recursiva
+# ================
+
+# Limpiar el área de trabajo
+rm(list = ls())
+
+archivo <- "GTM_COU_2013-2019.xlsx"
+hojas <- excel_sheets(archivo)
+# extraemos solo las que nos interesan
+hojas <- hojas[-c(1, 15)]
+
+lista <- c("inicio")
+
+
+for (i in 1:length(hojas)) {
+  # Extraemos el año y la unidad de medida
+  info <- read_excel(
+    archivo,
+    range = paste("'" , hojas[i], "'!B4:B5", sep = "") ,
+    col_names = FALSE,
+    col_types = "text",
+  )
+  # Extraemos el texto de la cadena de caracteres
+  anio <- as.numeric((str_extract(info[2, ], "\\d{4}")))
+  unidad <- toString(info[1, ]) # unidad de medida
+  # precios Corrientes o medidas Encadenados
+  if (unidad != "Millones de quetzales") {
+    precios <- "Encadenados"
+    unidad <- c("Millones de quetzales en medidas encadenadas de volumen con año de referencia 2013")
+  }
+  else {
+    precios <- "Corrientes"
+  }
+  
+  # Cuadro de Oferta
+  # ================
+  
+  oferta <- as.matrix(read_excel(
+    archivo,
+    range = paste("'" , hojas[i], "'!D11:DT162", sep = ""),
+    # Nótese que no incluimos la fila de totales
+    col_names = FALSE,
+    col_types = "numeric"
+  ))
+  rownames(oferta) <- c(sprintf("of%03d", seq(1, dim(oferta)[1])))
+  colnames(oferta) <- c(sprintf("oc%03d", seq(1, dim(oferta)[2])))
+  
+  # Columnas a eliminar con subtotales y totales
+  
+  # 93	P1 PRODUCCION (PB)	Producción de mercado		SUBTOTAL DE MERCADO
+  # 98	P1 PRODUCCION (PB)	Producción para uso final propio		SUBTOTAL USO FINAL PROPIO
+  # 108	P1 PRODUCCION (PB)	Producción no de mercado		SUBTOTAL NO DE MERCADO
+  # 109	P1 TOTAL PRODUCCION (PB)
+  # 112	P7 IMPORTACIONES (CIF)	TOTAL		TOTAL
+  # 118	D21 IMPUESTOS SOBRE PRODUCTOS	TOTAL		TOTAL
+  # 121	TOTAL OFERTA (PC)	TOTAL OFERTA (PC)
+  
+  oferta <- oferta[, -c(93, 98, 108, 109, 112, 118, 121)]
+  
+  # Desdoblamos
+  oferta <- cbind(anio, precios, "Oferta", melt(oferta), unidad)
+  
+  colnames(oferta) <-
+    c("Año",
+      "Precios",
+      "Cuadro",
+      "Filas",
+      "Columnas",
+      "Valor",
+      "Unidades")
+  
+  # Cuadro de utilización
+  # =====================
+  
+  utilizacion <- as.matrix(read_excel(
+    archivo,
+    range = paste("'" , hojas[i], "'!D169:DQ320", sep = ""),
+    # Nótese que no incluimos la fila de totales
+    col_names = FALSE,
+    col_types = "numeric"
+  ))
+  rownames(utilizacion) <-
+    c(sprintf("uf%03d", seq(1, dim(utilizacion)[1])))
+  colnames(utilizacion) <-
+    c(sprintf("uc%03d", seq(1, dim(utilizacion)[2])))
+  
+  #   Columnas a eliminar con subtotales y totales
+  
+  #   uc093	P2 CONSUMO INTERMEDIO (PC)	SUBTOTAL DE MERCADO
+  #   uc098	P2 CONSUMO INTERMEDIO (PC)	SUBTOTAL USO FINAL PROPIO
+  #   uc108	P2 CONSUMO INTERMEDIO (PC)	SUBTOTAL NO DE MERCADO
+  #   uc109	"P2 TOTAL CONSUMO INTERMEDIO
+  #   uc112	P6 EXPORTACIONES (FOB)
+  #   uc115	P3 GASTO DE CONSUMO FINAL
+  #   uc118	TOTAL UTILIZACIÓN
+  
+  utilizacion <- utilizacion[, -c(93, 98, 108, 109, 112, 115, 118)]
+  
+  # Desdoblamos
+  utilizacion <-
+    cbind(anio, 
+          precios, 
+          "Utilizacion", 
+          melt(utilizacion), 
+          unidad)
+  
+  colnames(utilizacion) <-
+    c("Año",
+      "Precios",
+      "Cuadro",
+      "Filas",
+      "Columnas",
+      "Valor",
+      "Unidades")
+  
+  
+  # Cuadros de Valor Agregado y empleo solo para precios Corrientes
+  # ========================
+  
+  if (precios == "Corrientes") {
+    # Cuadro de Valor Agregado
+    # ========================
+    
+    valorAgregado <- as.matrix(read_excel(
+      archivo,
+      range = paste("'" , hojas[i], "'!D325:DH330", sep = ""),
+      col_names = FALSE,
+      col_types = "numeric"
+    ))
+    rownames(valorAgregado) <-
+      c(sprintf("vf%03d", seq(1, dim(valorAgregado)[1])))
+    colnames(valorAgregado) <-
+      c(sprintf("vc%03d", seq(1, dim(valorAgregado)[2])))
+    
+    #   Columnas a eliminar con subtotales y totales
+    
+    #   vc093	SUBTOTAL DE MERCADO
+    #   vc098	SUBTOTAL USO FINAL PROPIO
+    #   vc108	SUBTOTAL NO DE MERCADO
+    #   vc109 TOTAL
+    
+    valorAgregado <- valorAgregado[, -c(93, 98, 108, 109)]
+    
+    # Desdoblamos
+    valorAgregado <-
+      cbind(anio,
+            precios,
+            "Valor Agregado",
+            melt(valorAgregado),
+            unidad)
+    
+    colnames(valorAgregado) <-
+      c("Año",
+        "Precios",
+        "Cuadro",
+        "Filas",
+        "Columnas",
+        "Valor",
+        "Unidades")
+    
+    # Empleo
+    # ======
+    
+    empleo <- as.data.frame(read_excel(
+      archivo,
+      range = paste("'" , hojas[i], "'!D332:DH332", sep = ""),
+      col_names = FALSE,
+      col_types = "numeric"
+    ))
+    rownames(empleo) <- c(sprintf("ef%03d", seq(1, dim(empleo)[1])))
+    colnames(empleo) <- c(sprintf("ec%03d", seq(1, dim(empleo)[2])))
+    
+    #   Columnas a eliminar con subtotales y totales
+    
+    #   vc093	SUBTOTAL DE MERCADO
+    #   vc098	SUBTOTAL USO FINAL PROPIO
+    #   vc108	SUBTOTAL NO DE MERCADO
+    #   vc109 TOTAL
+    
+    empleo <- empleo[, -c(93, 98, 108, 109)]
+    
+    #Desdoblamos
+    empleo <- cbind(anio,
+                    precios,
+                    "Empleo",
+                    "ef001",
+                    melt(empleo),
+                    "Puestos de trabajo")
+    
+    colnames(empleo) <- c("Año",
+                          "Precios",
+                          "Cuadro",
+                          "Filas",
+                          "Columnas",
+                          "Valor",
+                          "Unidades")
+    
+  }
+  
+  # Unimos todas las partes
+  if (precios == "Corrientes") {
+    union <- rbind(oferta, 
+                   utilizacion, 
+                   valorAgregado, 
+                   empleo)
+    
+    assign(paste("COU_", anio, "_", precios, sep = ""), 
+           union)
+  }
+  else {
+    union <- rbind(oferta, utilizacion)
+    assign(paste("COU_", anio, "_", precios, sep = ""), 
+           union)
+  }
+  lista <- c(lista, paste("COU_", anio, "_", precios, sep = ""))
+}
+
+# Actualizamos nuestra lista de objetos creados
+lista <- lapply(lista[-1], as.name)
+
+# Unimos los objetos de todos los años y precios
+SCN <- do.call(rbind.data.frame, lista)
+
+# Y borramos los objetos individuales
+do.call(rm,lista)
+
+
+
+# Le damos significado a las filas y columnas
+
+clasificacionColumnas <- read_xlsx(
+  "filas_y_columnas.xlsx",
+  sheet = "columnas",
+  col_names = TRUE,
+)
+clasificacionFilas <- read_xlsx(
+  "filas_y_columnas.xlsx",
+  sheet = "filas",
+  col_names = TRUE,
+)
+
+SCN <- join(SCN,clasificacionColumnas,by = "Columnas")
+SCN <- join(SCN,clasificacionFilas, by = "Filas")
+gc()
