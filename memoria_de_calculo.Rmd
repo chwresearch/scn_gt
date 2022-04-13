@@ -73,6 +73,8 @@ oferta_2013 <- as.matrix(read_excel(
 ```
 
 
+
+
 ```{r eliminar}
 
 # Columnas a eliminar con subtotales y totales
