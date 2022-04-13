@@ -277,10 +277,11 @@ write.xlsx(
   asTable = FALSE
 )
 
-write.csv(
-  SCN,
-  "scn.csv",
-  col.names = TRUE,
-  row.names = FALSE,
-  fileEncoding = "latin1"
-)
+# El formato CSV se exporta muy grande, pero se comprime muy bien a 3mb
+# write.csv(
+#   SCN,
+#   "scn.csv",
+#   col.names = TRUE,
+#   row.names = FALSE,
+#   fileEncoding = "latin1"
+# )
