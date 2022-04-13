@@ -74,11 +74,12 @@ for (i in 1:length(hojas)) {
   oferta <- oferta[, -c(93, 98, 108, 109, 112, 118, 121)]
   
   # Desdoblamos
-  oferta <- cbind(anio, precios, "Oferta", melt(oferta), unidad)
+  oferta <- cbind(anio, precios,1, "Oferta", melt(oferta), unidad)
   
   colnames(oferta) <-
     c("Año",
       "Precios",
+      "No. Cuadro",
       "Cuadro",
       "Filas",
       "Columnas",
@@ -115,14 +116,16 @@ for (i in 1:length(hojas)) {
   # Desdoblamos
   utilizacion <-
     cbind(anio, 
-          precios, 
-          "Utilizacion", 
+          precios,
+          2,
+          "Utilización", 
           melt(utilizacion), 
           unidad)
   
   colnames(utilizacion) <-
     c("Año",
       "Precios",
+      "No. Cuadro",
       "Cuadro",
       "Filas",
       "Columnas",
@@ -161,6 +164,7 @@ for (i in 1:length(hojas)) {
     valorAgregado <-
       cbind(anio,
             precios,
+            3,
             "Valor Agregado",
             melt(valorAgregado),
             unidad)
@@ -168,6 +172,7 @@ for (i in 1:length(hojas)) {
     colnames(valorAgregado) <-
       c("Año",
         "Precios",
+        "No. Cuadro",
         "Cuadro",
         "Filas",
         "Columnas",
@@ -198,6 +203,7 @@ for (i in 1:length(hojas)) {
     #Desdoblamos
     empleo <- cbind(anio,
                     precios,
+                    4,
                     "Empleo",
                     "ef001",
                     melt(empleo),
@@ -205,6 +211,7 @@ for (i in 1:length(hojas)) {
     
     colnames(empleo) <- c("Año",
                           "Precios",
+                          "No. Cuadro",
                           "Cuadro",
                           "Filas",
                           "Columnas",
@@ -258,3 +265,22 @@ clasificacionFilas <- read_xlsx(
 SCN <- join(SCN,clasificacionColumnas,by = "Columnas")
 SCN <- join(SCN,clasificacionFilas, by = "Filas")
 gc()
+
+# Y lo exportamos a Excel
+write.xlsx(
+  SCN,
+  "SCN_BD.xlsx",
+  sheetName= "SCNGT_BD",
+  rowNames=FALSE,
+  colnames=FALSE,
+  overwrite = TRUE,
+  asTable = FALSE
+)
+
+write.csv(
+  SCN,
+  "scn.csv",
+  col.names = TRUE,
+  row.names = FALSE,
+  fileEncoding = "latin1"
+)
