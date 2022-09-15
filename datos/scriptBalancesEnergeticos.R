@@ -52,7 +52,7 @@ for (i in 1:length(hojas)){
   ))
   
   balance[is.na(balance)] <- 0.0 # cambiamos "sin dato" a cero por conveniencia 
-  balance[c(3,16,17,18),] <- balance[c(3,16,17,18),] * (-1) # cambiamos los negativos
+  balance[c(5,7:15),] <- balance[c(5,7:15),] * (-1) # cambiamos los negativos
   rownames(balance) <- c(sprintf("bf%03d", seq(1, dim(balance)[1])))
   colnames(balance) <- c(sprintf("bc%03d", seq(1, dim(balance)[2])))
   
