@@ -9,7 +9,7 @@ library(plyr)
 rm(list = ls())
 
 # Se pone la ruta de trabajo en una variable (con "/")
-wd <- "/home/renato/GitHub/scn_gt/datos"
+wd <- "C:/Users/renato/GitHub/scn_gt/datos"
 # Cambiar la ruta de trabajo con la variable anterior
 setwd(wd)
 
@@ -52,8 +52,8 @@ for (i in 1:length(hojas)){
   ))
   
   balance[is.na(balance)] <- 0.0 # cambiamos "sin dato" a cero por conveniencia 
-  balance[c(7:14)>0,] <- 0 # cambiamos los positivos que no suman a la oferta
-  balance[c(7:14),] <- balance[c(7:14),] * (-1) # cambiamos los negativos
+  balance[balance[c(7:14),]>0] <- 0 # cambiamos los positivos que no suman a la oferta
+  balance[c(4,7:14),] <- balance[c(4,7:14),] * (-1) # cambiamos los negativos
   rownames(balance) <- c(sprintf("bf%03d", seq(1, dim(balance)[1])))
   colnames(balance) <- c(sprintf("bc%03d", seq(1, dim(balance)[2])))
   
