@@ -17,18 +17,15 @@ setwd(wd)
 # Lógica recursiva
 # ================
 
-# Limpiar el área de trabajo
-rm(list = ls())
-
 archivo <- "GTM_COU_2013-2019.xlsx"
 hojas <- excel_sheets(archivo)
 # extraemos solo las que nos interesan
-hojas <- hojas[-c(1, 15)]
+hojas <- hojas[ -c(1, 15) ]
 
 lista <- c("inicio")
+i <- 1
 
-
-for (i in 1:length(hojas)) {
+#for (i in 1:length(hojas)) {
   # Extraemos el año y la unidad de medida
   info <- read_excel(
     archivo,
@@ -42,9 +39,8 @@ for (i in 1:length(hojas)) {
   # precios Corrientes o medidas Encadenados
   if (unidad != "Millones de quetzales") {
     precios <- "Encadenados"
-    unidad <- c("Millones de quetzales en medidas encadenadas de volumen con año de referencia 2013")
-  }
-  else {
+    unidad <- "Millones de quetzales en medidas encadenadas de volumen con año de referencia 2013"
+  } else {
     precios <- "Corrientes"
   }
   
@@ -71,7 +67,7 @@ for (i in 1:length(hojas)) {
   # 118	D21 IMPUESTOS SOBRE PRODUCTOS	TOTAL		TOTAL
   # 121	TOTAL OFERTA (PC)	TOTAL OFERTA (PC)
   
-  oferta <- oferta[, -c(93, 98, 108, 109, 112, 118, 121)]
+  oferta <- oferta[   , -c(93, 98, 108, 109, 112, 118, 121)]
   
   # Desdoblamos
   oferta <- cbind(anio, precios,1, "Oferta", melt(oferta), unidad)
@@ -229,14 +225,13 @@ for (i in 1:length(hojas)) {
     
     assign(paste("COU_", anio, "_", precios, sep = ""), 
            union)
-  }
-  else {
+  } else {
     union <- rbind(oferta, utilizacion)
     assign(paste("COU_", anio, "_", precios, sep = ""), 
            union)
   }
   lista <- c(lista, paste("COU_", anio, "_", precios, sep = ""))
-}
+# }
 
 # Actualizamos nuestra lista de objetos creados
 lista <- lapply(lista[-1], as.name)
